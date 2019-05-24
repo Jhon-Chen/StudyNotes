@@ -723,6 +723,290 @@ arr.reduce(function(x, y){
 
 如果我们继续改进这个例子, 想办法把一个字符串`13579`变成`Array---[1, 3, 5, 7, 9]`, 再利用`reduce()`就可以写出一个把字符串转换为`Number`的函数.
 
+#### filter
 
--------待更新~~~
+filter也是一个常用的操作, 它用于把`Array`的某些元素过滤掉, 然后返回剩下的元素.
+和`map()`类似, `Array`的`filter()`也接受一个函数. 和`map()`不同的是, `filter()`把传入的函数依次作用于每个元素, 然后根据返回的值`true`还是`false`决定保留还是丢弃该元素.
+例如在一个`Array`中, 删掉偶数, 只保留技术, 可以这么写:
+
+```html
+var arr = [1, 2, 4, 5, 6, 9, 10, 15];
+var r = arr.filter(function(x){
+	return x % 2 !== 0;
+});
+r;  //[1, 5, 9, 15]
+```
+
+把一个`Array`中的空字符删掉, 可以这么写:
+
+```html
+var arr = ['A', 'B', null, undefined, 'C', ''];
+var r = arr.filter(function(s){
+	return s && s.trim(); // 注意: IE9一下没有trim()方法
+});
+r;  //['A', 'B', 'C']
+```
+
+可见用`filter()`这个高阶函数, 关键在于正确实现一个筛选函数.
+
+#### 回调函数
+
+`filter()`接受的回调函数, 其实可以有多个函数. 通常我们仅使用第一个参数, 表示`Array`的某个元素. 回调函数还可以接收另外两个参数, 表示元素的位置和数组本身:
+
+```html
+var arr = ['A','B','C'];
+var r = arr.filter(function(element, index, self){
+	console.log(element);  //一次打印'A','B','c'
+	console.log(index);  //依次打印0, 1, 2
+	console.log(self);  //self就是变量arr
+	return true;
+});
+```
+
+利用`filter`, 可以巧妙的去除`Array`的重复元素:
+
+```html
+var 
+	r,
+	arr = ['apple', 'strawberry', 'banana', 'pear', 'apple', 'orange', 'strawberry'];
+r = arr.filter(function(element, index, self){
+	return self.indexOf(element) === index;
+});
+```
+
+去除重复元素依靠的是`indexOf`总是返回第一个元素的位置, 后续的重复元素位置与`indexOf`返回的位置不相等, 因此被`filter`过滤掉了.
+
+#### sort排序算法
+
+排序也是在程序中经常用到的算法. 无论使用冒泡排序还是快速排序, 排序的核心是比较两个元素的大小. 如果是数字我们可以直接比较, 但如果是字符串或者两个对象呢? 直接比较数学上的大小是没有意义的, 因此, 比较的过程必须通过函数抽象出来. 通常规定, 对于两个元素`x`和`y`, 如果认为`x < y`, 则返回`-1`, 如果认为`x == y`, 则返回`0`, 如果认为`x > y`, 则返回`1`, 这样, 排序算法就不用关心具体的比较过程, 而是根据比较结果直接排序.
+JavaScript的`Array`的`sort()`方法就是用于排序的, 但是排序结果可能让你大吃一惊:
+
+```
+// 看上去正常的结果:
+['Google', 'Apple', 'Microsoft'].sort(); // ['Apple', 'Google', 'Microsoft'];
+
+// apple排在了最后:
+['Google', 'apple', 'Microsoft'].sort(); // ['Google', 'Microsoft", 'apple']
+
+// 无法理解的结果:
+[10, 20, 1, 2].sort(); // [1, 10, 2, 20]
+```
+
+第二个排序把`apple`排在了最后, 是因为字符串根据ASCII码进行排序, 而小写字母`a`的ASCII码在大写字母之后.
+为什么第三个排序结果也是错的呢?
+这是因为`Array`的`sort()`方法默认把所有元素先转换为String再排序, 结果`10`排在了`2`的前面, 因为字符`1`比字符`2`的ASCII码小.
+所以, 如果你不知道`sort()`方法的默认排序规则, 直接对数字排序, 绝对会被坑!!!
+幸运的是, `sort()`方法也是一个高阶函数, 它还可以接收一个比较函数来实现自定义的排序.
+要按数字大小排序, 我们可以这么写:
+
+```html
+var arr = [10, 20, 1, 2];
+arr.sort(function(x, y){
+	if(x < y){
+		return -1;
+	}
+	if(x > f){
+		return 1;
+	}
+	return 0;
+});
+console.log(arr);  //[1, 2, 10, 20]
+```
+
+如果要倒序排序, 我们可以把大的数放在前面
+默认情况下, 对字符串排序, 是按照ASCII的大小比较的, 现在, 我们提出排序应该忽略大小写, 不必对现有代码大加改动, 只要我们能定义出忽略大小写的比较算法就可以:
+
+```html
+var arr = ['Google', 'apple', 'Microsoft'];
+arr.sort(function (s1, s2) {
+    x1 = s1.toUpperCase();
+    x2 = s2.toUpperCase();
+    if (x1 < x2) {
+        return -1;
+    }
+    if (x1 > x2) {
+        return 1;
+    }
+    return 0;
+}); // ['apple', 'Google', 'Microsoft']
+```
+
+忽略大小写来比较两个字符串, 实际上就是先把字符串都变成大写(或者都变成小写), 再比较.
+最后友情提示, `sort()`方法会直接对`Array`进行修改, 他返回的结果仍是当前的`Array`
+
+```html
+var a1 = ['B', 'A', 'C'];
+var a2 = a1.sort();
+a1; // ['A', 'B', 'C']
+a2; // ['A', 'B', 'C']
+a1 === a2; // true, a1和a2是同一对象
+```
+
+#### Array
+
+对于数组, 除了`map()`、`reduce`、`filter()`、`sort()`这些方法可以传入一个函数之外, `Array`对象还提供了很多非常实用的高阶函数.
+
+##### every
+
+`every()`方法可以判断数组的所有元素是否满足测试条件. 例如, 给定一个包含若干字符串的数组, 判断所有字符串是否满足指定的测试条件:
+
+```html
+var arr = ['Apple', 'pear', 'orange'];
+console.log(arr.every(function(s){
+	return s.length > 0;
+}));   //true, 因为每个元素都满足s.length > 0;
+console.log(arr,every(function(s){
+	return s.toLowerCase() === s;
+}));   //false,因为不是每个元素全部都是小写
+```
+
+##### find
+
+`find()`方法用于查找符合条件的第一个元素, 如果找到了, 返回这个元素, 否则, 返回`undefined`:
+
+```html
+var arr = ['Apple', 'pear', 'orange'];
+console.log(arr.find(function(s){
+	return s.toLowerCase() === s;
+}));  //'pear' 
+console.log(arr.find(function(s){
+	return s.toUpperCase() === s;
+}));  //undefined
+```
+
+##### findIndex
+
+`findIndex()`和`find()`类似, 也是查找符合条件的第一个元素, 不同之处在于`findIndex()`会返回这个元素的索引, 如果没有找到, 返回`-1`:
+
+```html
+var arr = ['Apple', 'pear', 'orange'];
+console.log(arr.findIndex(function (s) {
+    return s.toLowerCase() === s;
+})); // 1, 因为'pear'的索引是1
+
+console.log(arr.findIndex(function (s) {
+    return s.toUpperCase() === s;
+})); // -1
+
+```
+
+##### forEach
+
+`forEach()`和`map()`类似，它也把每个元素依次作用于传入的函数，但不会返回新的数组。`forEach()`常用于遍历数组，因此，传入的函数不需要返回值：
+
+```html
+var arr = ['Apple', 'pear', 'orange'];
+arr.forEach(console.log); // 依次打印每个元素
+```
+
+#### 闭包
+
+##### 函数作为返回值
+
+高阶函数除了可以接受函数作为参数外, 还可以把函数作为结果值返回.
+我们来实现一个对`Array`的求和. 通常情况下, 求和的函数是这样定义的:
+
+```html
+function sum(arr){
+	return arr.reduce(function(x, y){
+		return x + y;
+	});
+}
+sum([1, 2, 3, 4, 5]);  //15
+```
+
+但是, 如果不需要立即求和, 而是在后面的代码中, 根据需要再计算怎么办? 可以不返回求和的结果, 而是返回求和的函数!
+
+```html
+function lazy_sum(arr){
+	var sum = function(){
+		return arr.reduce(function(x, y){
+			return x + y;
+		});
+	}
+	return sum;
+}
+```
+
+当我们调用`lazy_sum()`时, 返回的并不是求和结果, 而是求和函数:
+
+```html
+var f = lazy_sum([1, 2, 3, 4, 5]);  //function sum()
+```
+
+调用函数`f`时, 才真正计算求和的结果:
+
+```html
+f();  //15
+```
+
+在这个例子中, 我们在函数`lazy_sum`中定义了函数`sum`, 并且, 内部函数`sum`可以引用外部函数`lazy_sum`的参数和局部变量, 当`lazy_sum`返回函数`sum`时, 相关参数和变量都保存在返回的函数中, 这种称为`闭包(Closure)`的程序解构拥有极大的威力.
+再注意一点: 当我们调用`lazy_sum()`时, 每次调用都会返回一个新的函数, 即使传入相同的参数:
+
+```html
+var f1 = lazy_sum([1, 2, 3, 4, 5]);
+var f2 = lazy_sum([1, 2, 3, 4, 5]);
+f1 === f2;  //false
+```
+
+`f1()`和`f2()`的调用结果不影响.
+
+##### 闭包
+
+注意到返回的函数在其定义内部引用了局部变量`arr`, 所以, 当一个函数返回了一个函数后, 其内部的局部变量还被新函数引用, 所以闭包的实现并不容易.
+另外需要注意: 返回的函数并没有立即执行, 而是直到调用了`f()`才执行. 现在看一个例子:
+
+````html
+function count(){
+	var arr = [];
+	for (var i = 1; i <= 3; i++){
+		arr.push(function(){
+			return i * i;
+		});
+	}
+	return arr;
+}
+var results = count();
+var f1 = results[0];
+var f2 = results[1];
+var f3 = results[2];
+````
+
+在上面的例子中, 每次循环, 都创建了一个新的函数, 然后, 把创建的3个函数都添加到一个`Array`中返回了. 你可能认为返回的结果是`1, 4, 9`,但实际的结果是:
+
+```html
+f1();  //16
+f2();  //16
+f3();  //16
+```
+
+全部都是16! 原因就在于返回的函数引用了变量`i`, 但它并非立刻执行. 等到3个函数都返回时, 它们所引用的变量`i`已经变成了`4`, 因此最终结果为`16`.
+返回闭包时牢记的一点就是: 返回函数不要引用任何循环变量, 或者后续会发生变化的变量.
+如果一定要引用循环变量怎么办? 方法是再创建一个函数, 用该函数的参数绑定循环变量到当前的值, 无论该循环变量后续如何更改, 已绑定到函数参数的值不变:
+
+```html
+function count(){
+	var arr = [];
+	for(var i = 1; i <= 3; i++){
+		arr.push((function(n){
+			return function(){
+				return n * n;
+			}
+		})(i)):
+	}
+	return arr;
+}
+var results = count();
+var f1 = results[0];  // 1
+var f2 = results[1];  // 4
+var f3 = results[2];  // 9
+```
+
+理论上讲, 创建一个匿名函数并立即执行可以这么写:
+
+```html
+function(x){return x * x}{3};
+```
+
+
 
