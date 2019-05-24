@@ -1,0 +1,728 @@
+# <center>JavaScript教程の函数</center>
+
+[TOC]
+
+## 函数
+
+有了函数, 我们就可以将重复的部分写成更有意义的函数调用. 基本上所有的高等语言都支持函数, JavaScript也不例外. JavaScript的函数不仅可以像变量一样使用, 还具有非常强大的抽象能力.
+
+**抽象**
+
+抽象在数学中是非常常见的, 比如一些特殊的符号记法. 而这些抽象记法往往还是可扩展的. 可见, 借助抽象, 我们才能不关心底层的具体计算过程, 而是直接在更高的层次上思考问题. 写计算机程序也是一样, 函数就是最基本的一种抽象.
+
+### 函数的定义和调用
+
+#### 定义函数
+
+在JavaScript中, 定义函数的方式如下:
+
+```html
+function abs(x){
+	if(x > 0){
+	return x;
+	}else{
+	return -x;
+	}
+}
+```
+
+上述`abs()`的函数定义中:
+
+* `function`指出这是一个函数定义;
+* `abs`是函数的名称;
+* `(x)`括号内列出函数的参数, 多个参数以`,`分隔;
+* `{...}`之间的代码是函数体, 可以包含若干语句, 甚至可以没有的语句. 
+
+注意: 函数体内部的语句在执行时, 一旦执行到`return`时, 函数就执行完毕, 并将结果返回. 因此, 函数内部通过条件判断和循环可以实现非常复杂的逻辑.
+如果没有`return`语句, 函数执行完毕后也会返回一个结果, 只是结果为`undefined.`
+由于JavaScript的函数也是一个对象, 上述定义的`abs()`函数实际上是一个函数对象, 而函数名`abs`可以视为指向该函数的变量. 因此, 第二种定义函数的方法如下:
+
+```html
+var abs = function(x){
+	if(x >= 0){
+	 	return x;
+	}else{
+		return -x;
+	}
+};
+```
+
+在这种方式下, `function(x){...}`是一个匿名函数, 它没有函数名. 但是, 这个匿名函数赋值给了变量`abs`, 所以, 通过变量`abs`就可以调用该函数.
+上述两种定义完全等价, 注意第二种方式按照完整语法需要在函数体末尾加一个`;`,表示赋值语句结束
+
+#### 调用函数
+
+调用函数时, 按顺序传入参数即可:
+
+```html
+abs(10); //返回10
+```
+
+由于JavaScript允许传入任意个参数而不影响调用, 因此传入的参数比定义的参数多也没问题, 虽然函数内部并不需要这些参数, 而同时传入的参数少也没有问题:
+
+```html
+abs(10, 'bilibili'); //返回10
+abs();  //返回NaN
+```
+
+此时`abs(x)`函数的参数`x`将收到`undefined`, 计算结果为`NaN`.
+要避免收到`undefined`, 可以对参数进行检查:
+
+```html
+function abs(x){
+	if (typeof x!=='number'){
+		throw 'Not a number'
+	}
+	if (x>=0){
+		return x;
+	} else{
+		return -x;
+	}
+}
+```
+
+#### arguments
+
+JavaScript还有一个免费赠送的关键字`argument`, 它只在函数内部起作用, 并且永远指向当前函数的调用者传入的所有参数. `argument`类似`Array`但它不是一个`Array`:
+
+```html
+function foo(x){
+	console.log('x = '+ x);  //10
+	for (var i=0; i<arguments.length; i++){
+		console.log('arg' + i + '=' + arguments[i]);  //10, 20, 30
+	}
+}
+foo(10,20,30)
+```
+
+利用`arguments`, 你可以获得调用者传入的所有参数. 也及时说, 即使函数不定义任意参数, 还是可以拿到参数的值:
+
+```html
+function abs(){
+	if(arguments.length === 0){
+		return 0;
+	}
+	var x = arrguments[0];
+	return x >= 0 ? x : -x;
+}
+abs(); //0
+abs(10); //10
+abs(-9); //9
+```
+
+实际上`arguments`最常用于判断传入参数的个数, 你可能会看见这样的写法:
+
+```html
+//foo(a[, b], c)  接受2~3个参数, b是可选参数, 如果只传入2个参数, b默认为null
+function foo(a, b, c){
+	if(arguments.length === 2){
+		//实际拿到的参数是a和b, c为undefined
+		c = b;
+		b = null;
+	}
+	//... ...
+}
+```
+
+要把中间的参数`b`变为"可选"参数, 就只能通过`arguments`判断, 然后重新调整参数并赋值.
+
+#### rest参数
+
+由于JavaScript函数允许接受任意个参数, 于是我们就不得不用`arguments`来获取所有的参数:
+
+```html
+function foo(a,b){
+	var i, rest = [];
+	if(arguments.length > 2){
+		for(i = 2; i < arguments.length; i++){
+			rest.push(arguments[i]);
+		}
+	}
+	console.log('a = ' + a);
+	console.log('b = ' + b);
+	console.log(rest);
+}
+```
+
+为了获取除了已定义参数`a, b`之外的参数, 我们不得不用`arguments`, 并且循环要从索引`2`开始以排除前两个参数, 这种写法很别扭, 只是为了获取额外的`rest`参数, 我们都是用另外一个方法:
+
+````html
+function foo(a, b, ...rest){
+	console.log('a = ' + a);
+	console.log('b = ' + b);
+	console.log(rest);
+}
+foo(1, 2, 3, 4, 5);  //结果a=1, b=2, rest=[3, 4, 5]
+foo(1);  //结果a=1, b=undefined, rest=[]
+````
+
+rest参数只能写在最后, 前面用`...`标识, 从运行结果可知, 传入参数先绑定`a, b`, 多于的参数以数组的形式交给变量`rest`, 所以, 不需要`arguments`我们就获得了全部参数.
+如果传入的参数连正常定义的参数都没有填满, 也不要紧, rest参数会接受一个空数组(注意, 并不是undefined)
+
+#### 小心你的`return`语句
+
+前面我们提到了JavaScript引擎有一个在行末自动添加分号的机制, 这可能让你栽在return语句的一个大坑里:
+
+```html
+function foo(){
+	return {name: 'foo'};
+}
+foo(); //return {name: 'foo'}
+```
+
+如果把return语句拆成两行:
+
+```html
+function foo(){
+	return
+		{name: 'foo'};
+}
+foo();  //undefined
+```
+
+要小心了, 由于JavaScript引擎在行末自动添加分号的机制, 上面的代码实际上变成了:
+
+```html
+funciton foo(){
+	return;  //自动添加分号, 相当于返回了undefined;
+		{name: 'foo'};  //这个语句已经不执行了, 因为return终止了执行
+}
+```
+
+如果要用分行写, 那就需要将`return`的结果加上`{...}`以表示语句尚未结束.
+
+### 变量作用域与解构赋值
+
+在JavaScript中, 用`var`声明的变量实际上是有作用域的.
+如果一个变量在函数体内声明, 则该函数的作用域为整个函数体, 在函数体外不可引用该变量:
+
+```html
+function foo(){
+	var x = 1;
+	x = x + 1;
+}
+x = x + 2; //ReferenceError! 无法在函数体外引用变量x
+```
+
+如果两个不同的函数各自声明了同一个变量, 那么该变量只在各自的函数体内起作用. 换句话说, 不同函数内部的同名变量互相独立, 互不影响:
+
+```html
+function(){
+	var x = 1;
+	x = x + 1;
+}
+function bar(){
+	var x = 'a';
+	x = x + 'b';
+}
+```
+
+由于JavaScript的函数可以嵌套, 此时, 内部函数可以访问外部函数定义的变量, 反过来则不行:
+
+```html
+function foo(){
+	var x = 1;
+	function bar(){
+		var y = x + 1; //bar可以访问foo变量x
+	}
+	var z = y + 1; //ReferenceError! foo不可以访问bar的变量y!
+}
+```
+
+如果内部函数和外部函数的变量重名, 那内部函数的变量将"屏蔽"外部函数的变量. 这说明了JavaScript的函数在查找变量时从自身函数定义开始, 从"内"向"外"查找.
+
+#### 变量提升
+
+JavaScript的函数定义有个特点, 他会先扫描整个函数体的语言, 把所有声明的变量"提升"到函数顶部:
+
+```html
+function foo(){
+	var x = 'Hello,'+ y;
+	console.log(x);
+	var y = 'Bob';
+}
+foo();
+```
+
+虽然是`strict`模式, 但是`var x = 'Hello,'+ y;`并不会报错, 原因是变量`y`在稍后声明了. 但是`console.log`显示`Hello,undefined`, 说明变量`y`的值为`undefined`. 这正是因为JavaScript引擎自动提升了y的变量声明, 但是不会提升变量的赋值. 对于上述`foo()`函数, JavaScript引擎看到的代码相当于是:
+
+```html
+function foo(){
+	var y;
+	var x = 'Hello,'+ y;
+	console.log(x);
+	y = 'Bob';
+}
+foo();
+```
+
+由于JavaScript的这一怪异特性, 我们在函数内部定义变量时, 请严格遵守"在函数内部首先声明所有变量"这一规则. 最常见的做法是用一个`var`声明函数内部用到的所有变量:
+
+```html
+function foo(){
+	var
+		x = 1,
+		y = x + 1,
+		z, i;
+	for (i = 0; i < 100; i++){
+		...
+	}
+}
+```
+
+#### 全局作用域
+
+不在任何函数内定义的变量就具有全局作用域. 实际上, JavaScript默认有一个全局对象`window`, 全局作用域的变量实际上被绑定到`window`的一个属性:
+
+```html
+var course = 'Learn JavaScript';
+alert(course);  //'Learn JavaScript'
+alert(window.course); //'Learn JavaScript'
+```
+
+因此, 直接访问全局变量`course`和访问`window.course`是完全一样的.
+由于函数定义有两种方式, 以变量方式`var foo = function(){}`定义的函数实际上也是一个全局变量, 因此, 顶层函数的定义也被视为一个全局变量, 并绑定到`window`对象:
+
+```html
+function foo(){
+	alert('foo');
+}
+foo();  //直接调用
+window.foo();  //通过window.foo()调用
+```
+
+进一步说, 我们每次直接调用的`alert()`函数其实也是`window`的一个变量. 如果把一个函数赋值给`window.alert`会导致`alert`无法正常使用. 这说明JavaScript实际上只有一个全局作用域. 任何变量(函数也视为变量), 如果没有在当前函数作用域中找到, 就会继续往上查找, 最后如果在全局作用域中也没有找到, 就会报`ReferenceError`错误.
+
+名字空间
+
+全局变量会绑定到`window`上, 不同的JavaScript文件如果使用了相同的全局变量, 或者定义了相同名字的顶层函数, 都会造成命名冲突, 而这种错误还很难发现.
+减少冲突的一个方法是把自己的所有变量和函数全部绑定到一个全局变量中. 例如:
+
+```html
+//唯一的全局变量MYAPP
+var MYAPP = {};
+//其他变量
+MYAPP.name = 'myapp';
+MYAPP.version = 1.0;
+//其他函数
+MYAPP.foo = function(){
+	return 'foo';
+};
+```
+
+把自己的代码全部放入唯一的名字空间`MYAPP`中, 会大大减少全局变量冲突的可能. 许多注明的JavaScript库都是这么干的, 比如 jQuery, YUI, underscore等.
+
+#### 局部作用域
+
+由于JavaScript的变量作用域实际上是函数内部, 我们在`for`循环等语句块中无法定义具有局部作用域的变量的:
+
+```html
+function foo(){
+	for(var i = 0; i<100; i++){
+		... ...
+	}
+	i += 100; //仍然可以引用变量 i
+}
+```
+
+为了解决块级作用域, ES6引入了新的关键字`let`, 用`let`替代`var`可以声明一个块级作用域的变量:
+
+```html
+function foo(){
+	var sum = 0;
+	for (let i=0; i<100; i++){
+		sum += i;
+	}
+	i += 1;  //SyntaxError
+}
+```
+
+#### 常量
+
+由于`var`和`let`声明的是变量, 如果要声明一个常量, 在ES6之前是不行的, 我们通常用全部大写的变量来标识"这是一个变量, 不要修改它的值":
+
+```html
+var PI = 3.14;
+```
+
+ES6标准引入了新的关键字`const`来定义常量, `const`与`let`都具有块级作用域:
+
+```html
+const PI = 3.14;
+PI = 3;  //某些浏览器不能不错, 但是无效果
+PI; //3.14
+```
+
+#### 解构赋值
+
+从ES6开始, JavaScript引入了解构赋值, 可以同时对一组变量进行赋值.  什么是解构赋值? 我们先看看传统的做法, 如何把一个数组的元素分别赋值给几个变量:
+
+```html
+var arr = ['hello', 'javascript', 'ES6'];
+var x = arr[0];
+var y = arr[1];
+var z = arr[2];
+```
+
+现在, 在ES6中, 可以使用解构赋值, 直接对多个变量同时赋值:
+
+```html
+// 需要浏览器支持解构赋值
+var[x, y, z] = ['hello', 'javascript', 'ES6'];  //x,y,z分别为赋值为数组对应的元素
+```
+
+注意: 对数组元素进行解构赋值时, 多个变量要用`[...]`括起来.如果数组本身还有嵌套, 也可以通过下面的形式进行解构赋值, 注意嵌套层次和位置要保持一致:
+
+```html
+let [x,[y,z]] = ['hello',['javascript','ES6']];
+```
+
+解构赋值还可以忽略某些元素:
+
+```html
+let [,,z] = ['hello', 'javascript', 'ES6'];  //忽略前两个元素, 只对z赋值第三个元素
+```
+
+如果需要从第一个对象中取出若干属性, 也可以使用解构赋值, 便于快速获取对象的指定属性:
+
+```html
+var person = {
+	name: '小明',
+	age: 20,
+	gender: 'male',
+	passport: 'G-12345'
+	school: 'No.4 middleschool'
+};
+var {name, age, passport} = person;
+```
+
+对一个对象进行解构赋值时, 同样可以直接对嵌套的对象属性进行赋值, 只要保证对应层次是一致的:
+
+```html
+var person = {
+	name: '小明',
+	age: 20,
+	gender: 'male',
+	passport: 'G-12345'
+	school: 'No.4 middleschool'
+	address: {
+		city: 'Beijing',
+		street: 'No.1 Road',
+		zipcode: '1001'
+	}
+};
+var {name, address:{city,zip}} = person;  //zip是undefined, 因为属性名不对 要注意address不是变量
+```
+
+使用解构赋值对对象属性进行赋值时, 如果对应的属性不存在, 变量将被赋值为`undefined`, 这和引用一个不存在的属性获得`undefined`是一致的. 如果要使用的变量名和属性名不一致, 可以使用下面的语法获取:
+
+```html
+var person = {
+	name: '小明',
+	age: 20,
+	gender: 'male',
+	passport: 'G-12345'
+	school: 'No.4 middleschool'
+};
+// 把passport属性赋值给变量id
+let {name, passport:id} = person;
+// 注意: passport不是变量, 而是为了让变量id获得passport属性
+```
+
+解构赋值还可以使用默认值, 这样就避免了不存在的属性返回`undefined`的问题:
+
+```html
+var person = {
+	name: '小明',
+	age: 20,
+	gender: 'male',
+	passport: 'G-12345'
+	school: 'No.4 middleschool'
+};
+// 如果person对象没有single属性, 默认赋值为true
+var {name, single=true} =person;
+```
+
+有些时候, 如果变量已经被声明了, 再赋值的时候, 正确的写法也会报语法错误:
+
+```html
+//声明变量
+var x,y;
+//解构赋值
+{x, y} = {name: '小明', x: 100, y: 200};  //语法错误
+```
+
+这是因为JavaScript引擎把`{`开头的语句当作了块处理, 于是`=`不再合法.  解决方法是用小括号括起来:
+
+```html
+({x, y} = {name: '小明', x: 100, y: 200});
+```
+
+#### 使用场景
+
+解构赋值在很多时候可以大大简化代码. 例如, 交换两个变量的值就不再需要临时变量:
+
+```html
+var x = 1, y = 2;
+[x, y] = [y, x]
+```
+
+快速获取当前页面的域名和路径:
+
+```html
+var {hostname: domain, pathname: path} = location; 
+```
+
+如果一个函数接收一个对象作为参数, 那么, 可以使用解构直接把对象的属性绑定到变量中. 例如, 下面的函数可以快速创建一个`Date`对象:
+
+```html
+function buildDate({year, month, day, hour=0, minute=0, second=0}){
+	return new Date(year + '-' + month + '-' + day + '' + hour + ':' + minute + ':' + second);
+}
+```
+
+它的方便之处在于传入的对象只需要`year`、`month`和`day`这三个属性:
+
+```html
+buildDate({year:2017, month:1, day:1});
+//Sun Jan 01 2017 00:00:00 GMT+0800(CST)
+```
+
+也可以传入`hour`、`minute`和`second`属性:
+
+```html
+bulidDate({year:2017, month:1, day:1, hour:20, minute:15});
+//Sun Jan 01 2017 20:15:00 GMT+0800(CST)
+```
+
+使用解构赋值可以减少代码量, 但是, 需要在支持ES6解构赋值特性的现代浏览器才能正常运行.
+
+### 方法
+
+在一个对象中绑定函数, 称为这个对象的方法.
+在JavaScript中, 对象的定义时这样的:
+
+```html
+var xiaoming = {
+	name: '小明',
+	birth: 1990
+};
+```
+
+但是如果我们给`xiaoming`绑定一个函数, 就可以做更多的事情:
+
+```html
+var xiaoming = {
+	name: '小明',
+	birth: 1990
+	age: function(){
+		var y = new Date().getFullYear();
+		return y - this.birth;
+	}
+};
+xiaoming.age;  //function xiaoming.age()
+xiaoming.age();  //今年调用是25 明年调用是26
+```
+
+绑定到对象上的函数称为方法, 和普通函数也没什么区别, 但是他在内部使用了一个`this`关键字.
+在一个方法内部, `this`是一个特殊的变量, 它始终指向当前对象, 也就是`xiaoming`这个变量. 所以, `this.birth`可以拿到`xiaoming`的`birth`属性.
+
+JavaScript的函数内部如果调用了`this`, 那么这个`this`到底指向谁?
+答案是视情况而定.
+如果以对象的方式形式调用, 比如`xiaoming.age()`, 该函数的`this`指向被调用的对象, 也就是`xiaoming`, 这就符合我们得预期.
+如果单独调用函数,比如`getage()`, 此时, 该函数的`this`指向全局对象, 也就是`window`.
+要注意:
+
+```html
+var fun = xiaoming.age;  //先拿到xiaoming的age函数
+fun();  //NaN
+```
+
+也是不行的!!! 要保证`this`指向正确, 必须用`obj.xxx()`的形式调用!
+由于这是一个巨大的设计错误, 要想纠正可没那么简单. ECMA决定, 在strict模式下让函数的`this`指向`undefined`, 因此, 在strict模式下会得到一个错误:
+
+```html
+var xiaoming = {
+	name: '小明',
+	birth: 1900,
+	age: function(){
+		var y = new Date().getFullYear();
+		return y - this.birth;
+	}
+};
+var fn = xiaoming.age;
+fn();  //报错undefined
+```
+
+这个决定只是让错误即使暴露出来, 并没有解决`this`应该指向的正确位置.
+有些时候, 喜欢重构的你把方法重构了一下:
+
+```html
+var xiaoming = {
+	name: '小明',
+	birth: 1990,
+	age: function(){
+		function getAgeFromBirth(){
+			var y = new Date().getFullYear();
+			return y - this.birth;
+		}
+		return getAgeFromBirth();
+	}
+};
+xiaoming.age();  //报错undefined
+```
+
+结果又报错了! 原因是`this`指针只在`age`方法的函数内指向`xiaoming`, 在函数内部定义的函数, `this`又指向`undefined`了! (非strict模式下, 他会重新指向全局对象`window`!)
+修复的办法也不是没有, 我们用一个`that`变量首先捕获`this`:
+
+```html
+var xiaoming = {
+	name: '小明',
+	birth: 1990,
+	age: function(){
+		var that = this;  //在方法内部一开始就捕获this
+		function getAgeFromBirth(){
+			var y = new Data().getFullYear();
+			return y -that.birth;  //用that而不是this
+		}
+		return getAgeFromBirth();
+	}
+};
+xiaoming.age();  //25
+```
+
+用`var that = this;`, 你就可以放心地在方法内部定义其他函数, 而不是把所有语句都堆到一个方法中.
+
+#### apply
+
+虽然在一个独立的函数调用中, 根据是否是strict模式, `this`指向`undefined`或`window`, 不过, 我们还可以控制`this`的指向的.
+要指定函数的`this`指向哪一个对象, 可以用函数本身的`apply`方法, 它接收两个参数, 第一个参数就是需要绑定的`this`变量, 第二个参数是`Array`, 表示函数本身的参数.
+用`apply`修复`getAge()`调用:
+
+```html
+function getAge(){
+	var y -this.birth;
+}
+var xiaoming = {
+	name: '小明',
+	birth: 1990,
+	age: getAge
+};
+xiaoming.age();  //25
+getAge.apply(xiaoming, []);  //25, this指向xiaoming, 参数为空
+```
+
+另一个与`apply()`类似的方法是`call()`, 唯一的区别是:
+
+* `apply()`把参数打包成`Array`再传入;
+* `call()`把参数按顺序传入.
+
+比如调用`Math.max(3, 5, 3)`,分别用`apply()`和`call()`实现如下:
+
+```html
+Math.max.apply(null,[3,5,4]);  //5
+Math.max.call(null,3,5,4);  //5
+```
+
+对于普通函数调用, 我们常把`this`绑定为`null`.
+
+#### 装饰器
+
+利用`apply()`, 我们还可以动态的改变函数的行为.
+JavaScript的所有对象都是动态的, 即使内置的函数, 我们也可以重新指向新的函数.
+现在假定我们想统计一下代码一共调用了多少次`parselnt()`,可以把所有的调用都找出来, 然后手动加上`count += 1`, 不过这样做太傻了. 最佳方案是用我们自己的函数替换掉默认的`parselnt()`:
+
+```html
+var count = 0;
+var oldParselnt = parselnt;  //保留原函数
+window.parselnt = function(){
+	count += 1;
+	return oldParselnt.apply(null, arguments);  //调用原函数
+};
+```
+
+### 高阶函数
+
+JavaScript的函数其实都纸箱某个变量. 既然变量可以指向函数, 函数的参数能接受变量, 那么一个函数就可以接受另一个函数作为参数, 这种函数就称之为高阶函数.
+一个简单地高阶函数:
+
+```html
+function add(x,y,f){
+	return f(x) + f(y);
+}
+```
+
+#### map/reduce
+
+注: 可以去读一下Google那篇鼎鼎大名的论文"[MapReduce: Simplified Data Processing on Large Clusters](<https://www.cnblogs.com/YaoDD/p/6017397.html>)", 你就能大概明白map/reduce的概念.
+
+##### map
+
+举例说明 比如我们有一个函数$f(x)=x^2$, 要把这个函数作用在一个数组`[1,2,3,4,5,6,7,8,9]`上, 就可以用`map`实现如下:![Snipaste_2019-05-24_17-20-54d9c5a.jpg](https://miao.su/images/2019/05/24/Snipaste_2019-05-24_17-20-54d9c5a.jpg)
+
+由于`map()`方法定义在JavaScript的`Array`中, 我们调用`Array`的`map()`方法, 传入我们自己的函数, 就得到了一个新的`Array`作为结果:
+
+```html
+function pow(x){
+	return x * x;
+}
+var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+var results = arr.map(pow);  // [1, 4, 9, 16, 25, 36, 49, 64, 81]
+console.log(results);
+```
+
+注意: `map()`传入的参数是`pow`, 即函数对象本身.
+你可能回想, 不需要`map()`, 写一个循环, 也可以计算出结果:
+
+```html
+var f = function(x){
+	return x * x;
+};
+var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+var result = [];
+for (var i=0; i<arr.length; i++) {
+    result.push(f(arr[i]));
+}
+```
+
+的确可以, 但是, 从上面的循环代码, 我们无法一眼看明白"把$f(x)$"作用在`Array`的每一个元素并把结果生成一个新的`Array`.
+所以, `map()`作为高阶函数, 事实上它把运算规则抽象了, 因此我们可以简化计算任意复杂的函数, 例如把`Array`的所有数字转为字符串:
+
+```html
+var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+arr.map(String); // ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+```
+
+仅仅需要一行代码.
+
+##### reduce
+
+再看`reduce`的用法. `Array`的`reduce()`把一个函数作用在这个`Array`的$[x_1,x_2,x_3...]$上, 这个函数必须接受两个参数, `reduce()`把结果继续和序列的下一个元素做累积运算, 其效果就是:
+
+```html
+[x_1,x_2,x_3...].reduce(f) = f(f(f(x_1,x_2), x_3), x_4)
+```
+
+比方说对一个`Array`求和, 就可以用`reduce`实现:
+
+```html
+var arr = [1, 3, 5, 7, 9];
+arr.reduce(function(x, y){
+	return x + y;
+});  // 25
+```
+
+要把`[1, 3, 5, 7, 9]`变换成整数13579, `reduce()`也能派上用场:
+
+```html
+var arr = [1, 3, 5, 7, 9];
+arr.reduce(function(x, y){
+	return x * 10 + y;
+});  // 13579
+```
+
+如果我们继续改进这个例子, 想办法把一个字符串`13579`变成`Array---[1, 3, 5, 7, 9]`, 再利用`reduce()`就可以写出一个把字符串转换为`Number`的函数.
+
+
+-------待更新~~~
+
