@@ -318,3 +318,89 @@ Redis与其他key-value缓存产品有以下三大特点：
 * 删除集合b4中权限大于7的元素
   `zremrangeby score key 7`
 
+## 与Python的交互
+
+>  [源码见github仓库]([https://github.com/Jhon-Chen/Code_Practice/tree/master/F_flask/Part7_Redis%E6%95%B0%E6%8D%AE%E5%BA%93](https://github.com/Jhon-Chen/Code_Practice/tree/master/F_flask/Part7_Redis数据库))
+
+## 搭建主从
+
+### 主从概念
+
+* 一个master可以拥有多个slave，一个slave又可以拥有多个slave，如此下去，形成了强大的多级服务器集群架构
+* master用来写数据，slave用来读数据，经统计：网站的读写比率是10:1
+* 通过主从配置可以实现读写分离
+* master和slave都是一个redis实例（redis服务）
+
+![imagebac15.png](https://miao.su/images/2019/06/18/imagebac15.png)
+
+### 主从配置
+
+#### 配置主
+
+* 查看当前主机的ip地址,注意，阿里云查出来的是内网ip
+  `ifconfig`
+* 修改 etc/redis/redis.config 文件
+  `sudo vim redis.conf`
+  `bind 47.100.200.127`
+* 重启redis服务
+  `sudo service redis stop`
+  `redis-server redis.conf`
+
+#### 配置从
+
+* 复制 etc/redis/redis.conf 文件
+  `sudo cp redis.conf ./slave.conf`
+* 修改 redis/slave.conf 文件
+  `sudo vim slave.conf`
+* 编辑内容
+  `bind 47.100.200.127`
+  `slaveof 47.100.200.127 6379`
+  `port 6378`
+* redis服务
+  `sudo redis-server slave.conf`
+* 查看主从关系
+  `redis-cli -h 47.100.200.127 info Replication`
+
+#### 数据操作
+
+* 在master和slave分别执行info命令，查看输出信息 进入主客户端
+  `redis-cli -h 47.100.200.127 -p 6379`
+* 进入从客户端
+  `redis-cli -h 47.100.200.127 -p 6378`
+* 在master上写数据
+  `set aa aa`
+* 在slave上读数据
+  `get aa`
+
+## 搭建集群
+
+> 之前我们已经建立主从概念，一主可以多从，如果同时的访问量过大（1000w），主服务器肯定会挂掉，数据服务就挂掉了或者发生自然灾难。
+>
+> 大公司都会有很多的服务器（华东、华南、华中、华北、西北、西南、东北、台港澳等地区的机房）
+
+### 集群的概念
+
+* 集群是一组相互独立的、通过高速互联网的计算机，它们构成了一个组，并以单一系统的模式加以管理。一个客户与集群互相作用时，集群像是一个独立的服务器。集群配置是用于提高可用性和可所方向。
+* 当请求到来，首先由负载均衡服务器处理，把请求转发到另外一台服务器上。
+
+![imagee2693.png](https://miao.su/images/2019/06/20/imagee2693.png)
+
+### Redis集群
+
+* 分类
+  * 软件层面
+  * 硬件层面
+
+* 软件层面：只有一台电脑，在这一台电脑上启动了多个redis服务
+
+![image96e6d.png](https://miao.su/images/2019/06/20/image96e6d.png)
+
+* 硬件层面：存在多台实体电脑，每台电脑上都启动了一个redis或者多个redis服务
+
+![image2b9b4.png](https://miao.su/images/2019/06/20/image2b9b4.png)
+
+### 搭建集群
+
+* 当前拥有两台主机47.100.200.127、（IP），这里的IP在使用时要改为实际值。
+
+具体略过。
